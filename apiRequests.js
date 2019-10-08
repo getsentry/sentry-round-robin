@@ -13,7 +13,7 @@ async function getProjectUsers(projectID, orgSlug, sentryAPIbase) {
     let result = await sendRequest(requestOptions);
     return result.map(userData => userData.user.username);
   } catch (error) {
-    console.log("Error retrieving project users: ", error);
+    console.log("Error retrieving project users: ", error.message);
     return [];
   }
 }
@@ -31,13 +31,15 @@ async function assignIssue(issueID, username) {
   try {
     let result = await sendRequest(requestOptions);
     console.log(`Assigned issue ${issueID} to ${username}!`);
+    return result;
   } catch (error) {
-    console.log("Error assigning issue: ", error);
+    console.log("Error assigning issue: ", error.message);
+    return null;
   }
 }
 
 module.exports = {
   getProjectUsers,
-  assignIssue,
+  assignIssue
 };
 

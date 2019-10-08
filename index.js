@@ -46,7 +46,6 @@ app.post('/', function(request, response) {
     assignIssue(issueID, queuedUsers.shift());
   }
 
-  response.send("Recieved: Issue created!");
+  response.send("Received: Issue created!");
 });
-
 
