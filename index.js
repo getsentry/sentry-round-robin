@@ -3,15 +3,13 @@ if (dotenvConfig.error) {
   throw dotenvConfig.error;
 }
 
+const {sentryAPIbase, projectID, orgSlug} = require('./constants');
+const {getProjectUsers, assignIssue} = require('./apiRequests');
+
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 app.use(bodyParser.json());
-const sendRequest = require('request-promise-native');
-
-const sentryAPIbase = 'https://sentry.io/api/0';
-const projectID = process.env.SENTRY_PROJECT_ID;
-const orgSlug = process.env.SENTRY_ORG;
 
 // Array of all usernames with access to the given project
 let allUsers;
@@ -51,39 +49,4 @@ app.post('/', function(request, response) {
   response.send("Recieved: Issue created!");
 });
 
-
-// Return array of users for given project (or [])
-async function getProjectUsers(projectID, orgSlug, sentryAPIbase) {
-  const requestOptions = {
-    url: `${sentryAPIbase}/organizations/${orgSlug}/users/?project=${projectID}`,
-    json: true,
-    headers: {'Authorization': 'Bearer ' + process.env.SENTRY_TOKEN}
-  };
-
-  try {
-    let result = await sendRequest(requestOptions);
-    return result.map(userData => userData.user.username);
-  } catch (error) {
-    console.log("Error retrieving project users: ", error);
-    return [];
-  }
-}
-
-// Assign issue to a given user
-async function assignIssue(issueID, username) {
-  const requestOptions = {
-    url: `${sentryAPIbase}/issues/${issueID}/`,
-    method: 'PUT',
-    json: true,
-    headers: {'Authorization': 'Bearer ' + process.env.SENTRY_TOKEN},
-    body: {'assignedTo': username}
-  };
-
-  try {
-    let result = await sendRequest(requestOptions);
-    console.log(`Assigned issue ${issueID} to ${username}!`);
-  } catch (error) {
-    console.log("Error assigning issue: ", error);
-  }
-}
 
