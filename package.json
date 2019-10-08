@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "test": "jest",
     "start": "node index.js"
   },
   "author": "",
@@ -15,5 +16,9 @@
     "express": "^4.17.1",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.7"
+  },
+  "devDependencies": {
+    "jest": "^24.9.0",
+    "nock": "^11.4.0"
   }
 }
