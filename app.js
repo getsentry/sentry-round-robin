@@ -18,7 +18,6 @@ let queuedUsers;
 
 // When receiving a POST request from Sentry:
 app.post('/', function(request, response) {
-  
   const resource = request.get('sentry-hook-resource');
   const action = request.body.action;
   const issueID = request.body.data.issue.id;
