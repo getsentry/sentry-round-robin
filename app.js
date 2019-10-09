@@ -1,4 +1,6 @@
 const dotenvConfig = require('dotenv').config();
+const http = require('http');
+
 if (dotenvConfig.error) {
   throw dotenvConfig.error;
 }
@@ -13,6 +15,7 @@ app.use(bodyParser.json());
 
 // Array of all usernames with access to the given project
 let allUsers;
+
 // Array of usernames queued up to be assigned to upcoming new issues
 let queuedUsers;
 
@@ -20,7 +23,6 @@ let queuedUsers;
 app.post('/', function(request, response) {
   const resource = request.get('sentry-hook-resource');
   const action = request.body.action;
-  const issueID = request.body.data.issue.id;
 
   // If a new issue was just created
   if (resource === 'issue' && action === 'created') {
@@ -31,6 +33,7 @@ app.post('/', function(request, response) {
     }
 
     // Assign issue to the next user in the queue and remove user from queue
+    const issueID = request.body.data.issue.id;
     assignIssue(issueID, queuedUsers.shift());
   }
 
@@ -43,6 +46,10 @@ async function init() {
     queuedUsers = [...allUsers];  
 }
 
-module.exports = {
-    app, init
-};
+app.listen = function () {
+  init();
+  var server = http.createServer(this)
+  return server.listen.apply(server, arguments)
+}
+
+module.exports = app;
