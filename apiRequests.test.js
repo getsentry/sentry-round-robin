@@ -3,7 +3,6 @@ const nock = require('nock');
 const {sentryAPIbase, projectID, orgSlug} = require('./constants');
 const {getProjectUsers, assignIssue} = require('./apiRequests');
 
-
 const testOrgSlug = 'testOrg';
 const testProjectID = '123456';
 const testIssueID = '987654';
