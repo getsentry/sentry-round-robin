@@ -38,15 +38,20 @@ describe("index.js", () => {
 
   });
 
+  // Reset state of user queue
+  afterEach( () => {
+    app.allUsers = [...mockData.userNames];
+    app.queuedUsers = [...mockData.userNames];
+  });
+
   afterAll(() => {
     server.close();
   });
 
 
-  test.only("Upon receiving POST request from Sentry with new issue data, server sends reponse 200", async function () {
+  test("Upon receiving POST request from Sentry with new issue data, server sends reponse 200", async function () {
     try {
       let result = await sendRequest(newIssueRequestOptions);
-      console.log(result);
       expect(result).toBe('ok');
     } catch (error) {
       console.log("Error in test, sending POST to '/': ", error.message);

@@ -14,7 +14,7 @@ const bodyParser = require('body-parser');
 app.use(bodyParser.json());
 
 // Array of all usernames with access to the given project
-let allUsers = [];
+app.allUsers = [];
 
 // Array of usernames queued up to be assigned to upcoming new issues
 app.queuedUsers = [];
@@ -29,7 +29,7 @@ app.post('/', async function(request, response) {
 
     // Init or reset queue if empty
     if (app.queuedUsers.length === 0) {
-      app.queuedUsers = [...allUsers];
+      app.queuedUsers = [...app.allUsers];
     }
 
     // Assign issue to the next user in the queue and remove user from queue
@@ -42,8 +42,8 @@ app.post('/', async function(request, response) {
 
 // Get list of users for project, save to queue
 async function init() {
-  allUsers = await getProjectUsers(projectID, orgSlug, sentryAPIbase);
-  app.queuedUsers = [...allUsers];  
+  app.allUsers = await getProjectUsers(projectID, orgSlug, sentryAPIbase);
+  app.queuedUsers = [...app.allUsers];
 }
 
 app.listen = async function () {
