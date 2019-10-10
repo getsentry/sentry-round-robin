@@ -22,12 +22,19 @@ describe("index.js", () => {
 
     // Mock Sentry API responses
     nock(sentryAPIbase)
+      .persist() // Don't remove this interceptor when request received
       .get(`/organizations/${mockData.orgSlug}/users/?project=${mockData.projectID}`)
       .reply(200, mockData.getUsersResponse);
 
     nock(sentryAPIbase)
-     .put(`/issues/${mockData.issueID}/`, {'assignedTo': mockData.userNames[0]})
-     .reply(200, mockData.assignIssueResponse);
+      .persist()
+      .put(`/issues/${mockData.issueID}/`, {'assignedTo': mockData.userNames[0]})
+      .reply(200, mockData.assignIssueResponse(mockData.userNames[0]));
+
+    nock(sentryAPIbase)
+      .persist()
+      .put(`/issues/${mockData.issueID}/`, {'assignedTo': mockData.userNames[1]})
+      .reply(200, mockData.assignIssueResponse(mockData.userNames[1]));
 
     app.use(function(err, req, res, next) {
       console.error(err.stack); // Explicitly output any stack trace dumps to stderr
@@ -69,6 +76,27 @@ describe("index.js", () => {
       expect(app.queuedUsers.length).toBe(1);
       expect(app.queuedUsers[0]).toBe(mockData.userNames[1]);
 
+    } catch (error) {
+      console.log("Error in test, sending POST to '/': ", error.message);
+    }
+  });
+
+  test("When all users in queue are assigned an issue, queue is reset", async function () {
+    try {
+      // Assign both mock users to issues, removing them form users queue
+      await sendRequest(newIssueRequestOptions);
+      await sendRequest(newIssueRequestOptions);
+
+      // Expect queue to be empty
+      expect(app.queuedUsers.length).toBe(0);
+
+      // Assign a third mock user, prompting queue to be reset
+      await sendRequest(newIssueRequestOptions);
+      
+      // User #1 immediately assigned and removed from queue,
+      // so user at index 0 is now user #2
+      expect(app.queuedUsers.length).toBe(1);
+      expect(app.queuedUsers[0]).toBe(mockData.userNames[1]);
     } catch (error) {
       console.log("Error in test, sending POST to '/': ", error.message);
     }
