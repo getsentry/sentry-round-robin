@@ -102,5 +102,21 @@ describe("index.js", () => {
     }
   });
 
+  test.only("When a user no longer exists, reassign to subsequent users until successful, or repopulate the queue", async function () {
+    // Override with mock user that doesn't exist in the mock API
+    app.queuedUsers[0] = 'Mr. Nobody';
+
+    try {
+      // Assign both mock users to issues, removing them form users queue
+      await sendRequest(newIssueRequestOptions);
+
+      // Expect queue to be empty after removing nonexistent user #1
+      // and then assigning/removing user #2
+      expect(app.queuedUsers.length).toBe(0);
+    } catch (error) {
+      console.log("Error in test, sending POST to '/': ", error.message);
+    }
+  });
+
 });
 
