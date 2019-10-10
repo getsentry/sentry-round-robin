@@ -1,4 +1,3 @@
-const request = require("supertest");
 const nock = require('nock');
 const sendRequest = require('request-promise-native');
 const {sentryAPIbase} = require('../constants');
@@ -7,6 +6,17 @@ const mockData = require('./mockdata.js');
 describe("index.js", () => {
   let server;
   const app = require("../app");
+
+  const newIssueRequestOptions = {
+    url: `http://127.0.0.1:${process.env.PORT}`,
+    method: 'POST',
+    json: true,
+    headers: {
+      'Authorization': 'Bearer ' + process.env.SENTRY_TOKEN,
+      'Sentry-Hook-Resource': 'issue'
+    },
+    body: mockData.newIssueRequestBody
+  };
 
   beforeAll( async () => {
 
@@ -33,42 +43,30 @@ describe("index.js", () => {
   });
 
 
-  test("Upon receiving POST request from Sentry with new issue data, server sends reponse 200", done => {
-    let response = request(server)
-      .post("/")
-      .set({ "Sentry-Hook-Resource": "issue" })
-      .send(mockData.newIssueRequestBody)
-      .expect(200);
-    done();
+  test.only("Upon receiving POST request from Sentry with new issue data, server sends reponse 200", async function () {
+    try {
+      let result = await sendRequest(newIssueRequestOptions);
+      console.log(result);
+      expect(result).toBe('ok');
+    } catch (error) {
+      console.log("Error in test, sending POST to '/': ", error.message);
+    }
   });
 
   test("First user is assigned to an issue and removed from queue", async function () {
-    
     // Start with array of user #1 and user #2
     expect(app.queuedUsers.length).toBe(2);
     expect(app.queuedUsers[0]).toBe(mockData.userNames[0]);
 
-    const requestOptions = {
-      url: `http://127.0.0.1:${process.env.PORT}`,
-      method: 'POST',
-      json: true,
-      headers: {
-        'Authorization': 'Bearer ' + process.env.SENTRY_TOKEN,
-        'Sentry-Hook-Resource': 'issue'
-      },
-      body: mockData.newIssueRequestBody
-    };
-
     try {
-      let result = await sendRequest(requestOptions);
+      await sendRequest(newIssueRequestOptions);
       // Expect user #1 to be removed, so user at index 0 is now user #2
       expect(app.queuedUsers.length).toBe(1);
       expect(app.queuedUsers[0]).toBe(mockData.userNames[1]);
 
     } catch (error) {
-      console.log("Error retrieving project users: ", error.message);
+      console.log("Error in test, sending POST to '/': ", error.message);
     }
-
   });
 
 });

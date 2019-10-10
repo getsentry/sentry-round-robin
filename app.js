@@ -37,7 +37,7 @@ app.post('/', async function(request, response) {
     let result = await assignIssue(issueID, app.queuedUsers.shift());
   }
 
-  response.status(200).end();
+  response.status(200).send('ok');
 });
 
 // Get list of users for project, save to queue
