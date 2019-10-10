@@ -20,8 +20,6 @@ async function getProjectUsers(projectID, orgSlug, sentryAPIbase) {
 
 // Assign issue to a given user
 async function assignIssue(issueID, username) {
-  console.log("issid: ", issueID);
-  console.log("username: ", username);
   const requestOptions = {
     url: `${sentryAPIbase}/issues/${issueID}/`,
     method: 'PUT',

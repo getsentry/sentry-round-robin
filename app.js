@@ -17,12 +17,10 @@ app.use(bodyParser.json());
 let allUsers = [];
 
 // Array of usernames queued up to be assigned to upcoming new issues
-let queuedUsers = [];
+app.queuedUsers = [];
 
 // When receiving a POST request from Sentry:
 app.post('/', async function(request, response) {
-
-  console.log("appjs on post to /, : ", queuedUsers);
   const resource = request.get('sentry-hook-resource');
   const action = request.body.action;
 
@@ -30,38 +28,27 @@ app.post('/', async function(request, response) {
   if (resource === 'issue' && action === 'created') {
 
     // Init or reset queue if empty
-    if (queuedUsers.length === 0) {
-      queuedUsers = [...allUsers];
+    if (app.queuedUsers.length === 0) {
+      app.queuedUsers = [...allUsers];
     }
 
     // Assign issue to the next user in the queue and remove user from queue
     const issueID = request.body.data.issue.id;
-    console.log(request.body);
-  console.log("issid: ", issueID);
-
-    console.log("appjs queuedUsers RIGHT BEFORE assignIss: ", queuedUsers);
-    let result = await assignIssue(issueID, queuedUsers.shift());
-    console.log("appjs AFTER assignIssue");
+    let result = await assignIssue(issueID, app.queuedUsers.shift());
   }
 
-  response.send("Received: Issue created!");
+  response.status(200).end();
 });
 
+// Get list of users for project, save to queue
 async function init() {
-  console.log("called init");
-  // Get list of users for project, save to queue
   allUsers = await getProjectUsers(projectID, orgSlug, sentryAPIbase);
-  queuedUsers = [...allUsers];  
-
-  console.log("end init -- queuedUsers: ", queuedUsers);
-  return queuedUsers;
+  app.queuedUsers = [...allUsers];  
 }
 
 app.listen = async function () {
-  console.log("called listen");
-  queuedUsers = await init();
+  await init();
   let server = http.createServer(this);
-  console.log("end of listen");
   return server.listen.apply(server, arguments)
 }
 
