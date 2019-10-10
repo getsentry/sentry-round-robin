@@ -6,12 +6,15 @@ const mockData = require('./mockdata.js');
 describe("index.js", () => {
   let server;
 
-  beforeAll((done) => {
+  beforeAll( async () => {
 
-    // Mock requests
+    // Mock Sentry API responses
     nock(sentryAPIbase)
       .get(`/organizations/${mockData.orgSlug}/users/?project=${mockData.projectID}`)
       .reply(200, mockData.getUsersResponse);
+
+    console.log("indextest mockissID ", mockData.issueID);
+  console.log("indextest username: ", mockData.userNames[0]);
 
     nock(sentryAPIbase)
      .put(`/issues/${mockData.issueID}/`, {'assignedTo': mockData.userNames[0]})
@@ -24,20 +27,34 @@ describe("index.js", () => {
       next(err, req, res);
     });
 
-    server = app.listen(process.env.PORT, done);
+    console.log("INDEXtest, beforeAll, before app.listen");
+
+    server = await app.listen(process.env.PORT, () => {console.log("listen done");});
+    console.log("INDEXtest, beforeAll, AFTER app.listen");
   });
 
   afterAll(() => {
     server.close();
   });
 
-  test("post / (webhook)", done => {
+  test("Upon receiving POST request from Sentry with new issue data, server sends reponse 200", done => {
+    console.log(mockData.issueID);
     request(server)
       .post("/")
       .set({ "Sentry-Hook-Resource": "issue" })
-      .send({ action: "created", data: { issue: { id: "1337" } } })
-      .expect(404, done);
+      .send({ action: "created", data: { issue: { id: mockData.issueID} } })
+      .expect(200, done);
   });
+
+  /*
+  test("First user is assigned to an issue and removed from queue", done => {
+ 
+    // Hit '/' webhook
+    // ...how to check queue?!?! it's stuck in app.js
+
+    done();
+  });
+*/
 
 });
 

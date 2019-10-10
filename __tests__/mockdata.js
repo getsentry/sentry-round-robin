@@ -47,7 +47,7 @@ const assignIssueResponse = {
   project: 
    { platform: '',
      slug: 'buggy-sentry-project',
-     id: '1456385',
+     id: projectID',
      name: 'Quick Little Bug (JS, Glitch)' },
   statusDetails: {}
 };
