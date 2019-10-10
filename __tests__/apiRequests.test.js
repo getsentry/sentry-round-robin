@@ -1,9 +1,7 @@
 const nock = require('nock');
 
-const {sentryAPIbase, projectID, orgSlug} = require('../constants');
+const {sentryAPIbase} = require('../constants');
 const {getProjectUsers, assignIssue} = require('../apiRequests');
-// const {mockGetUsersResponse, mockAssignIssueResponse} = require('./mockdata.js');
-
 const mockData = require('./mockdata.js');
 
 // Remove previous mock API endpoints after each test

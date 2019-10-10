@@ -1,8 +1,10 @@
-// Mocked API response bodies:
-
-// Sample data for API requests
+// Test env vars to point to fake org and project to match mocked API
+const sentryDSN = 'https://test@sentry.io/12345';
+const sentryToken = 'abc123';
 const orgSlug = 'testOrg';
 const projectID = '123456';
+
+// Sample Sentry data for API requests
 const issueID = '987654';
 const userNames = ['testEmail@test.com', 'otherTestEmail@test.com'];
 
@@ -51,6 +53,8 @@ const assignIssueResponse = {
 };
 
 module.exports = {
+  sentryDSN,
+  sentryToken,
   orgSlug,
   projectID,
   issueID,

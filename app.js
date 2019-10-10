@@ -1,5 +1,4 @@
 const dotenvConfig = require('dotenv').config();
-const http = require('http');
 
 if (dotenvConfig.error) {
   throw dotenvConfig.error;
@@ -8,6 +7,7 @@ if (dotenvConfig.error) {
 const {sentryAPIbase, projectID, orgSlug} = require('./constants');
 const {getProjectUsers, assignIssue} = require('./apiRequests');
 
+const http = require('http');
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
@@ -21,6 +21,7 @@ let queuedUsers;
 
 // When receiving a POST request from Sentry:
 app.post('/', function(request, response) {
+
   const resource = request.get('sentry-hook-resource');
   const action = request.body.action;
 
@@ -41,15 +42,16 @@ app.post('/', function(request, response) {
 });
 
 async function init() {
-    // Get list of users for project, save to queue
-    allUsers = await getProjectUsers(projectID, orgSlug, sentryAPIbase);
-    queuedUsers = [...allUsers];  
+  // Get list of users for project, save to queue
+  allUsers = await getProjectUsers(projectID, orgSlug, sentryAPIbase);
+  queuedUsers = [...allUsers];  
 }
 
 app.listen = function () {
   init();
-  var server = http.createServer(this)
+  let server = http.createServer(this)
   return server.listen.apply(server, arguments)
 }
 
 module.exports = app;
+
