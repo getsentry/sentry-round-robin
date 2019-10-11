@@ -26,15 +26,23 @@ describe("index.js", () => {
       .get(`/organizations/${mockData.orgSlug}/users/?project=${mockData.projectID}`)
       .reply(200, mockData.getUsersResponse);
 
+    // Assign issue to mock user 1
     nock(sentryAPIbase)
       .persist()
       .put(`/issues/${mockData.issueID}/`, {'assignedTo': mockData.userNames[0]})
       .reply(200, mockData.assignIssueResponse(mockData.userNames[0]));
 
+    // Assign issue to mock user 2
     nock(sentryAPIbase)
       .persist()
       .put(`/issues/${mockData.issueID}/`, {'assignedTo': mockData.userNames[1]})
       .reply(200, mockData.assignIssueResponse(mockData.userNames[1]));
+
+    // Response for non-existent user
+    nock(sentryAPIbase)
+      .persist()
+      .put(`/issues/${mockData.issueID}/`, {'assignedTo': mockData.fakeUser})
+      .reply(400, mockData.getFakeUserResponse);
 
     app.use(function(err, req, res, next) {
       console.error(err.stack); // Explicitly output any stack trace dumps to stderr
@@ -102,9 +110,10 @@ describe("index.js", () => {
     }
   });
 
-  test.only("When a user no longer exists, reassign to subsequent users until successful, or repopulate the queue", async function () {
+  test("When a user no longer exists, reassign to subsequent users until successful", async function () {
     // Override with mock user that doesn't exist in the mock API
-    app.queuedUsers[0] = 'Mr. Nobody';
+    app.allUsers[0] = mockData.fakeUser;
+    app.queuedUsers[0] = mockData.fakeUser;
 
     try {
       // Assign both mock users to issues, removing them form users queue
@@ -113,6 +122,21 @@ describe("index.js", () => {
       // Expect queue to be empty after removing nonexistent user #1
       // and then assigning/removing user #2
       expect(app.queuedUsers.length).toBe(0);
+    } catch (error) {
+      console.log("Error in test, sending POST to '/': ", error.message);
+    }
+  });
+
+
+  test("Upon assigning an issue when no valid users are remaining in allUsers queue, request new list of users and reassign", async function () {
+    // Override with empty users queue
+    app.allUsers = [];
+    app.queuedUsers = [];
+
+    try {
+      // Create mocked new issue, triggering update of user queue
+      await sendRequest(newIssueRequestOptions);
+
     } catch (error) {
       console.log("Error in test, sending POST to '/': ", error.message);
     }
