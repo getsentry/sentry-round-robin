@@ -34,7 +34,7 @@ async function assignIssue(issueID, username) {
     return result;
   } catch (error) {
     console.log("Error assigning issue: ", error.message);
-    return null;
+    return error.statusCode;
   }
 }
 

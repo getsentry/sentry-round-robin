@@ -53,14 +53,14 @@ describe('assignIssue ', () => {
       });
   });
 
-  test(' where user doesnt exist fails with null', () => {
+  test(' where user doesnt exist fails with status code for no user', () => {
     nock(sentryAPIbase)
      .put(`/issues/${mockData.issueID}/`, {'assignedTo': mockData.userNames[0]})
-      .reply(404, {"assignedTo":["Unknown actor input"]});
+      .reply(mockData.noUserStatusCode, {"assignedTo":["Unknown actor input"]});
 
     return assignIssue(mockData.issueID, mockData.userNames[0])
       .then(res => {
-        expect(res).toBeNull();
+        expect(res).toBe(mockData.noUserStatusCode);
       });
   });
 
