@@ -45,7 +45,7 @@ describe('assignIssue ', () => {
   test('succeeds with status 200 and ...', () => {
     nock(sentryAPIbase)
      .put(`/issues/${mockData.issueID}/`, {'assignedTo': mockData.userNames[0]})
-     .reply(200, mockData.assignIssueResponse);
+     .reply(200, mockData.assignIssueResponse(mockData.userNames[0]));
 
     return assignIssue(mockData.issueID, mockData.userNames[0]).then(res => {
         expect(res.id).toBe(mockData.issueID);
