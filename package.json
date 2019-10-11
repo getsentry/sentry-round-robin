@@ -23,7 +23,8 @@
   },
   "jest": {
     "testPathIgnorePatterns": [
-      "./__tests__/mockdata.js"
+      "./__tests__/mockdata.js",
+      "./__tests__/jest.setup.js"
     ],
     "setupFilesAfterEnv": [
       "./__tests__/jest.setup.js"
