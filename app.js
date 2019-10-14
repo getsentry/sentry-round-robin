@@ -1,9 +1,3 @@
-const dotenvConfig = require('dotenv').config();
-
-if (dotenvConfig.error) {
-  throw dotenvConfig.error;
-}
-
 const {sentryAPIbase, projectID, orgSlug} = require('./constants');
 const {getProjectUsers, assignIssue} = require('./apiRequests');
 
