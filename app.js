@@ -1,5 +1,6 @@
 const { projectID, orgSlug } = require("./constants");
 const { getProjectUsers, assignIssue } = require("./apiRequests");
+const verifySignature = require("./verify");
 
 const http = require("http");
 const express = require("express");
@@ -13,8 +14,13 @@ app.allUsers = [];
 // Array of usernames queued up to be assigned to upcoming new issues
 app.queuedUsers = [];
 
+
 // When receiving a POST request from Sentry:
 app.post("/", async function(request, response) {
+  if (!verifySignature(request)) {
+    return response.status(401).send('bad signature');
+  }
+
   const resource = request.get("sentry-hook-resource");
   const action = request.body.action;
 
