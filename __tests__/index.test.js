@@ -65,12 +65,8 @@ describe("index.js", () => {
 
 
   test("Upon receiving POST request from Sentry with new issue data, server sends reponse 200", async function () {
-    try {
-      let result = await sendRequest(newIssueRequestOptions);
-      expect(result).toBe('ok');
-    } catch (error) {
-      console.log("Error in test, sending POST to '/': ", error.message);
-    }
+    let result = await sendRequest(newIssueRequestOptions);
+    expect(result).toBe('ok');
   });
 
   test("First user is assigned to an issue and removed from queue", async function () {
@@ -78,36 +74,28 @@ describe("index.js", () => {
     expect(app.queuedUsers.length).toBe(2);
     expect(app.queuedUsers[0]).toBe(mockData.userNames[0]);
 
-    try {
-      await sendRequest(newIssueRequestOptions);
-      // Expect user #1 to be removed, so user at index 0 is now user #2
-      expect(app.queuedUsers.length).toBe(1);
-      expect(app.queuedUsers[0]).toBe(mockData.userNames[1]);
-
-    } catch (error) {
-      console.log("Error in test, sending POST to '/': ", error.message);
-    }
+    await sendRequest(newIssueRequestOptions);
+    // Expect user #1 to be removed, so user at index 0 is now user #2
+    expect(app.queuedUsers.length).toBe(1);
+    expect(app.queuedUsers[0]).toBe(mockData.userNames[1]);
   });
 
   test("When all users in queue are assigned an issue, queue is reset", async function () {
-    try {
-      // Assign both mock users to issues, removing them form users queue
-      await sendRequest(newIssueRequestOptions);
-      await sendRequest(newIssueRequestOptions);
+    
+    // Assign both mock users to issues, removing them form users queue
+    await sendRequest(newIssueRequestOptions);
+    await sendRequest(newIssueRequestOptions);
 
-      // Expect queue to be empty
-      expect(app.queuedUsers.length).toBe(0);
+    // Expect queue to be empty
+    expect(app.queuedUsers.length).toBe(0);
 
-      // Assign a third mock user, prompting queue to be reset
-      await sendRequest(newIssueRequestOptions);
-      
-      // User #1 immediately assigned and removed from queue,
-      // so user at index 0 is now user #2
-      expect(app.queuedUsers.length).toBe(1);
-      expect(app.queuedUsers[0]).toBe(mockData.userNames[1]);
-    } catch (error) {
-      console.log("Error in test, sending POST to '/': ", error.message);
-    }
+    // Assign a third mock user, prompting queue to be reset
+    await sendRequest(newIssueRequestOptions);
+    
+    // User #1 immediately assigned and removed from queue,
+    // so user at index 0 is now user #2
+    expect(app.queuedUsers.length).toBe(1);
+    expect(app.queuedUsers[0]).toBe(mockData.userNames[1]);
   });
 
   test("When a user no longer exists, reassign to subsequent users until successful", async function () {
@@ -115,16 +103,13 @@ describe("index.js", () => {
     app.allUsers[0] = mockData.fakeUser;
     app.queuedUsers[0] = mockData.fakeUser;
 
-    try {
-      // Assign both mock users to issues, removing them form users queue
-      await sendRequest(newIssueRequestOptions);
+  
+    // Assign both mock users to issues, removing them form users queue
+    await sendRequest(newIssueRequestOptions);
 
-      // Expect queue to be empty after removing nonexistent user #1
-      // and then assigning/removing user #2
-      expect(app.queuedUsers.length).toBe(0);
-    } catch (error) {
-      console.log("Error in test, sending POST to '/': ", error.message);
-    }
+    // Expect queue to be empty after removing nonexistent user #1
+    // and then assigning/removing user #2
+    expect(app.queuedUsers.length).toBe(0);
   });
 
 
@@ -133,13 +118,8 @@ describe("index.js", () => {
     app.allUsers = [];
     app.queuedUsers = [];
 
-    try {
-      // Create mocked new issue, triggering update of user queue
-      await sendRequest(newIssueRequestOptions);
-
-    } catch (error) {
-      console.log("Error in test, sending POST to '/': ", error.message);
-    }
+    // Create mocked new issue, triggering update of user queue
+    await sendRequest(newIssueRequestOptions);
   });
 
 });
