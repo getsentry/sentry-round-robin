@@ -9,13 +9,15 @@ async function getProjectUsers(projectID, orgSlug) {
     headers: {'Authorization': 'Bearer ' + process.env.SENTRY_TOKEN}
   };
 
+  let result;
   try {
-    let result = await sendRequest(requestOptions);
-    return result.map(userData => userData.user.username);
+    result = await sendRequest(requestOptions);
   } catch (error) {
     console.log("Error retrieving project users: ", error.message);
     return [];
   }
+
+  return result.map(userData => userData.user.username);
 }
 
 // Assign issue to a given user
@@ -28,14 +30,14 @@ async function assignIssue(issueID, username) {
     body: {'assignedTo': username}
   };
 
+  let result;
   try {
-    let result = await sendRequest(requestOptions);
-    console.log(`Assigned issue ${issueID} to ${username}!`);
-    return result;
+    result = await sendRequest(requestOptions);
   } catch (error) {
     console.log("Error assigning issue: ", error.message);
     return error.statusCode;
   }
+  return result;
 }
 
 module.exports = {
