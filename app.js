@@ -1,4 +1,4 @@
-const {sentryAPIbase, projectID, orgSlug} = require('./constants');
+const {projectID, orgSlug} = require('./constants');
 const {getProjectUsers, assignIssue} = require('./apiRequests');
 
 const http = require('http');
@@ -53,7 +53,7 @@ app.post('/', async function(request, response) {
 
 // Get list of users for project, save to queue
 async function init() {
-  app.allUsers = await getProjectUsers(projectID, orgSlug, sentryAPIbase);
+  app.allUsers = await getProjectUsers(projectID, orgSlug);
   app.queuedUsers = [...app.allUsers];
 }
 
@@ -96,7 +96,7 @@ async function reassignIssue (issueID, userName) {
 async function repopulateUserQueue () {
   // If no valid users are remaining in the queue, request updated user list
   if (app.allUsers.length === 0) {
-    let updatedUsers = await getProjectUsers(projectID, orgSlug, sentryAPIbase);
+    let updatedUsers = await getProjectUsers(projectID, orgSlug);
     app.allUsers = [...updatedUsers];
   
     // If newly-retrieved list is still empty, give up!

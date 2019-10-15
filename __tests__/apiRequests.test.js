@@ -17,7 +17,7 @@ describe('getProjectUsers ', () => {
       .get(`/organizations/${mockData.orgSlug}/users/?project=${mockData.projectID}`)
       .reply(200, mockData.getUsersResponse);
 
-    const res = await getProjectUsers(mockData.projectID, mockData.orgSlug, sentryAPIbase)
+    const res = await getProjectUsers(mockData.projectID, mockData.orgSlug)
 
     expect(res).toContain(mockData.userNames[0]);
     expect(res).toContain(mockData.userNames[1]);
@@ -30,7 +30,7 @@ describe('getProjectUsers ', () => {
       .get(`/organizations/${mockData.orgSlug}/users/?project=${mockData.projectID}`)
       .reply(404, {"detail":"The requested resource does not exist"});
 
-    const res = await getProjectUsers(mockData.projectID, mockData.orgSlug, sentryAPIbase);
+    const res = await getProjectUsers(mockData.projectID, mockData.orgSlug);
     expect(res).toHaveLength(0);
   });
 
