@@ -1,5 +1,7 @@
 # Sentry internal integration sample: Round robin issue assigment
 
+![](https://travis-ci.org/getsentry/sentry-round-robin.svg?branch=master)
+
 This is a sample internal integration for Sentry that assigns new issues to users, round-robin style -- based on the users attached to a project at the time you start the server, this app will cycle through the users, assigning each new issue to a different user until everyone has been assigned. After each cycle, the list of users is reset and repeats again in the same order.
 
 Note: This first version currently works for only *one* project at a time. You'll need to copy the project ID into your `.env` to configure (see setup steps below).
