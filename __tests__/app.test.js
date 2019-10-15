@@ -178,10 +178,6 @@ describe("app.js", () => {
 
     });
 
-    afterEach(() => {
-      nock.restore();
-    });
-
     it("Should ignore webhook requests for non-issue resources", async function () {
       let result = await sendRequest({
         url: `http://127.0.0.1:${process.env.PORT}`,
