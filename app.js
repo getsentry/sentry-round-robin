@@ -1,10 +1,10 @@
-const {projectID, orgSlug} = require('./constants');
-const {getProjectUsers, assignIssue} = require('./apiRequests');
+const { projectID, orgSlug } = require("./constants");
+const { getProjectUsers, assignIssue } = require("./apiRequests");
 
-const http = require('http');
-const express = require('express');
+const http = require("http");
+const express = require("express");
 const app = express();
-const bodyParser = require('body-parser');
+const bodyParser = require("body-parser");
 app.use(bodyParser.json());
 
 // Array of all usernames with access to the given project
@@ -14,13 +14,12 @@ app.allUsers = [];
 app.queuedUsers = [];
 
 // When receiving a POST request from Sentry:
-app.post('/', async function(request, response) {
-  const resource = request.get('sentry-hook-resource');
+app.post("/", async function(request, response) {
+  const resource = request.get("sentry-hook-resource");
   const action = request.body.action;
 
   // If a new issue was just created
-  if (resource === 'issue' && action === 'created') {
-
+  if (resource === "issue" && action === "created") {
     // Init or reset queue if empty
     if (app.queuedUsers.length === 0) {
       app.queuedUsers = [...app.allUsers];
@@ -41,14 +40,14 @@ app.post('/', async function(request, response) {
     // If result is a 400 error (no user / user doesn't have permission),
     if (result != null && result === 400) {
       // Also remove this user from allUsers queue
-      app.allUsers = app.allUsers.filter( user => user !== userToUnqueue);
+      app.allUsers = app.allUsers.filter(user => user !== userToUnqueue);
 
       // Attempt to reassign issue until queue is empty; if so, get users again
       await reassignIssue(issueID, app.queuedUsers[0]);
     }
   }
 
-  response.status(200).send('ok');
+  response.status(200).send("ok");
 });
 
 // Get list of users for project, save to queue
@@ -59,7 +58,7 @@ async function init() {
 
 // Attempt to reassign an issue to each subsequent user in queue
 // NOTE: relying on global vars here
-async function reassignIssue (issueID, userName) {
+async function reassignIssue(issueID, userName) {
   // If queue is NOT empty, attempt to reassign to next users
 
   while (app.queuedUsers && app.queuedUsers.length > 0) {
@@ -70,13 +69,12 @@ async function reassignIssue (issueID, userName) {
     }
     // If unsuccessful, continue looping
   }
-  
+
   // If queue is empty, repopulate with updated users
   if (app.queuedUsers.length === 0) {
-   
     try {
       await repopulateUserQueue();
-      
+
       // Assign to next user if successfully repopulated list
       let result = await assignIssue(issueID, app.queuedUsers.shift());
       if (result != null && result !== 400) {
@@ -93,16 +91,17 @@ async function reassignIssue (issueID, userName) {
   return null;
 }
 
-async function repopulateUserQueue () {
+async function repopulateUserQueue() {
   // If no valid users are remaining in the queue, request updated user list
   if (app.allUsers.length === 0) {
     let updatedUsers = await getProjectUsers(projectID, orgSlug);
     app.allUsers = [...updatedUsers];
-  
+
     // If newly-retrieved list is still empty, give up!
     if (app.allUsers.length === 0) {
-      throw new Error("Unable to retrieve any users with access to this issue.");    
-
+      throw new Error(
+        "Unable to retrieve any users with access to this issue."
+      );
     }
   }
 
@@ -110,11 +109,10 @@ async function repopulateUserQueue () {
   app.queuedUsers = [...app.allUsers];
 }
 
-app.listen = async function () {
+app.listen = async function() {
   await init();
   let server = http.createServer(this);
-  return server.listen.apply(server, arguments)
-}
+  return server.listen.apply(server, arguments);
+};
 
 module.exports = app;
-

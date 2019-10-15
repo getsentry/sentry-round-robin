@@ -1,16 +1,16 @@
-const dotenvConfig = require('dotenv').config();
+const dotenvConfig = require("dotenv").config();
 if (dotenvConfig.error) {
   throw dotenvConfig.error;
 }
 
-const Sentry = require('@sentry/node');
+const Sentry = require("@sentry/node");
 Sentry.init({ dsn: process.env.SENTRY_DSN });
 
-const express = require('express');
+const express = require("express");
 const app = express();
 
 const listener = app.listen(process.env.PORT, function() {
-  console.log('Listening on port ' + listener.address().port);
+  console.log("Listening on port " + listener.address().port);
 
   try {
     gottaCatchEmAll();
@@ -22,6 +22,4 @@ const listener = app.listen(process.env.PORT, function() {
     });
     console.log("Sent event to Sentry");
   }
-
 });
-
