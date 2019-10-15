@@ -19,7 +19,9 @@
   },
   "devDependencies": {
     "jest": "^24.9.0",
-    "nock": "^11.4.0"
+    "lint-staged": "^9.4.2",
+    "nock": "^11.4.0",
+    "prettier": "^1.18.2"
   },
   "jest": {
     "testPathIgnorePatterns": [
@@ -29,5 +31,8 @@
     "setupFilesAfterEnv": [
       "./__tests__/jest.setup.js"
     ]
+  },
+  "lint-staged": {
+    "**/*.js": ["prettier --write", "git add"]
   }
 }
