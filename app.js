@@ -17,7 +17,7 @@ app.queuedUsers = [];
 
 // When receiving a POST request from Sentry:
 app.post("/", async function(request, response) {
-  if (!verifySignature(request)) {
+  if (!verifySignature(request, process.env.SENTRY_API_SECRET)) {
     return response.status(401).send('bad signature');
   }
 
