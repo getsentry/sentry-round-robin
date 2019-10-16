@@ -19,6 +19,13 @@ describe("app.js", () => {
   };
 
   beforeAll(async () => {
+    // Mock request for fetching users that fires on server spin-up
+    nock(sentryAPIbase)
+      .get(
+        `/organizations/${mockData.orgSlug}/users/?project=${mockData.projectID}`
+      )
+      .reply(200, mockData.getUsersResponse);
+
     app.use(function(err, req, res, next) {
       console.error(err.stack); // Explicitly output any stack trace dumps to stderr
       next(err, req, res);

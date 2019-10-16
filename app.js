@@ -5,6 +5,7 @@ const http = require("http");
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
+
 app.use(bodyParser.json());
 
 // Array of all usernames with access to the given project
@@ -33,18 +34,7 @@ app.post("/", async function(request, response) {
       await repopulateUserQueue();
     }
 
-    // Otherwise, remove this user from the queue and attempt to assign issue
-    const userToUnqueue = app.queuedUsers.shift();
-    let result = await assignIssue(issueID, userToUnqueue);
-
-    // If result is a 400 error (no user / user doesn't have permission),
-    if (result != null && result === 400) {
-      // Also remove this user from allUsers queue
-      app.allUsers = app.allUsers.filter(user => user !== userToUnqueue);
-
-      // Attempt to reassign issue until queue is empty; if so, get users again
-      await reassignIssue(issueID, app.queuedUsers[0]);
-    }
+    await assignNextUser(issueID);
   }
 
   response.status(200).send("ok");
@@ -52,43 +42,26 @@ app.post("/", async function(request, response) {
 
 // Get list of users for project, save to queue
 async function init() {
-  app.allUsers = await getProjectUsers(projectID, orgSlug);
-  app.queuedUsers = [...app.allUsers];
+  await repopulateUserQueue();
 }
 
-// Attempt to reassign an issue to each subsequent user in queue
-// NOTE: relying on global vars here
-async function reassignIssue(issueID, userName) {
-  // If queue is NOT empty, attempt to reassign to next users
-
+async function assignNextUser(issueID) {
   while (app.queuedUsers && app.queuedUsers.length > 0) {
-    let result = await assignIssue(issueID, app.queuedUsers.shift());
-
-    if (result != null && result !== 400) {
-      return result;
-    }
-    // If unsuccessful, continue looping
-  }
-
-  // If queue is empty, repopulate with updated users
-  if (app.queuedUsers.length === 0) {
-    try {
-      await repopulateUserQueue();
-
-      // Assign to next user if successfully repopulated list
-      let result = await assignIssue(issueID, app.queuedUsers.shift());
-      if (result != null && result !== 400) {
-        return result;
-      }
-    } catch (error) {
-      console.log(error.message);
-      return null;
+    const userToUnqueue = app.queuedUsers.shift();
+    let result = await assignIssue(issueID, userToUnqueue);
+    if (result !== null && result === 400) {
+      // If the user was rejected by the server, pull them out of the master list
+      app.allUsers = app.allUsers.filter(user => user !== userToUnqueue);
+    } else if (result !== null && result !== 200) {
+      return;
     }
   }
 
-  // If still unsuccessful after all that, give up!
-  console.log("Unable to assign issue.");
-  return null;
+  await repopulateUserQueue();
+  // If repopulating user queue gave us some new users, try assigning again,
+  // otherwise bail out.
+  // WARNING: Can this recur infinitely?
+  return app.queuedUsers ? assignNextUser(issueID) : null;
 }
 
 async function repopulateUserQueue() {
@@ -99,7 +72,7 @@ async function repopulateUserQueue() {
 
     // If newly-retrieved list is still empty, give up!
     if (app.allUsers.length === 0) {
-      throw new Error(
+      console.error(
         "Unable to retrieve any users with access to this issue."
       );
     }
