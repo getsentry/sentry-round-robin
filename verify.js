@@ -5,7 +5,6 @@ function verifySignature(request, secret='') {
   const hmac = crypto.createHmac("sha256", secret);
   hmac.update(JSON.stringify(request.body), 'utf8');
   const digest = hmac.digest('hex');
-  console.log(digest);
   return digest === request.headers["sentry-hook-signature"];
 }
 
