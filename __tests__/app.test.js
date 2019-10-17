@@ -3,6 +3,8 @@ const sendRequest = require("request-promise-native");
 const { sentryAPIbase } = require("../constants");
 const mockData = require("./mockdata.js");
 
+jest.mock('../verify.js');
+
 describe("app.js", () => {
   let server;
   const app = require("../app");
