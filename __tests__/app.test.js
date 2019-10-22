@@ -176,18 +176,17 @@ describe("app.js", () => {
     expect(app.queuedUsers.length).toBe(1);
   });
 
-  describe("no-ops", function () {
+  describe("no-ops", function() {
     let request;
-    beforeEach(function () {
+    beforeEach(function() {
       // Assign issue to mock user 1
       request = nock(sentryAPIbase)
         .put(`/issues/${mockData.issueID}/`)
         .query(true)
-        .replyWithError('should never be called')
-
+        .replyWithError("should never be called");
     });
 
-    it("Should ignore webhook requests for non-issue resources", async function () {
+    it("Should ignore webhook requests for non-issue resources", async function() {
       let result = await sendRequest({
         url: `http://127.0.0.1:${process.env.PORT}`,
         method: "POST",
@@ -196,13 +195,13 @@ describe("app.js", () => {
           Authorization: "Bearer " + process.env.SENTRY_TOKEN,
           "Sentry-Hook-Resource": "event"
         },
-        body:{}
+        body: {}
       });
       expect(result).toBe("ok");
       expect(request.isDone()).toBe(false); // API never called
     });
 
-    it("Should ignore webhook requests for issue resources that are not 'created' actions", async function () {
+    it("Should ignore webhook requests for issue resources that are not 'created' actions", async function() {
       let result = await sendRequest({
         url: `http://127.0.0.1:${process.env.PORT}`,
         method: "POST",
@@ -211,10 +210,39 @@ describe("app.js", () => {
           Authorization: "Bearer " + process.env.SENTRY_TOKEN,
           "Sentry-Hook-Resource": "issue"
         },
-        body:{ action: "deleted" }
+        body: { action: "deleted" }
       });
       expect(result).toBe("ok");
       expect(request.isDone()).toBe(false); // API never called
+    });
+  });
+
+  describe("async", function() {
+    it("when queue is empty, simultaneous webhooks should not trigger multiple user fetches", async function() {
+      // Override with empty users queue
+      nock.cleanAll();
+
+      app.allUsers = [];
+      app.queuedUsers = [];
+
+      const request = nock(sentryAPIbase)
+        .put(`/issues/${mockData.issueID}/`)
+        .times(2)
+        .reply(200, mockData.assignIssueResponse(mockData.userNames[0]));
+
+      // Mock request for fetching users; persist between tests
+      nock(sentryAPIbase)
+        .get(
+          `/organizations/${mockData.orgSlug}/users/?project=${mockData.projectID}`
+        )
+        .delay(1000) // intentional delay
+        .reply(200, mockData.getUsersResponse);
+
+      // execute multiple webhook POSTs in parallel
+      const result1 = sendRequest(newIssueRequestOptions);
+      const result2 = sendRequest(newIssueRequestOptions);
+      await result1;
+      await result2;
     });
   });
 });

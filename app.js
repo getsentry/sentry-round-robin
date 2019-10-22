@@ -71,6 +71,7 @@ async function assignNextUser(issueID) {
 }
 
 async function repopulateUserQueue() {
+  console.warn('REPOPULATE');
   // If no valid users are remaining in the queue, request updated user list
   if (app.allUsers.length === 0) {
     let updatedUsers = await getProjectUsers(projectID, orgSlug);
