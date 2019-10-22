@@ -34,12 +34,6 @@ app.post("/", async function(request, response) {
 
     // Assign issue to the next user in the queue and remove user from queue
     const issueID = request.body.data.issue.id;
-
-    // If queue is currently empty, reset!
-    if (app.queuedUsers.length === 0) {
-      await repopulateUserQueue();
-    }
-
     await assignNextUser(issueID);
   }
 
@@ -53,12 +47,13 @@ async function init() {
 
 async function assignNextUser(issueID) {
   while (app.queuedUsers && app.queuedUsers.length > 0) {
-    const userToUnqueue = app.queuedUsers.shift();
-    let result = await assignIssue(issueID, userToUnqueue);
+    const dequeuedUser = app.queuedUsers.shift();
+    let result = await assignIssue(issueID, dequeuedUser);
     if (result !== null && result === 400) {
       // If the user was rejected by the server, pull them out of the master list
-      app.allUsers = app.allUsers.filter(user => user !== userToUnqueue);
-    } else if (result !== null && result !== 200) {
+      removeUserFromList(dequeuedUser);
+    } else if (result !== null) {
+      // succes
       return;
     }
   }
@@ -70,6 +65,9 @@ async function assignNextUser(issueID) {
   return app.queuedUsers ? assignNextUser(issueID) : null;
 }
 
+function removeUserFromList(targetUser) {
+  app.allUsers = app.allUsers.filter(user => user !== targetUser);
+}
 async function repopulateUserQueue() {
   // If no valid users are remaining in the queue, request updated user list
   if (app.allUsers.length === 0) {
