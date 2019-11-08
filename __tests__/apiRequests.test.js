@@ -37,7 +37,7 @@ describe("getProjectUsers ", () => {
 });
 
 describe("assignIssue ", () => {
-  test("succeeds with status 200 and ...", async () => {
+  test("succeeds with response body containing issueID and username", async () => {
     nock(sentryAPIbase)
       .put(`/issues/${mockData.issueID}/`, {
         assignedTo: mockData.userNames[0]
@@ -50,7 +50,7 @@ describe("assignIssue ", () => {
     expect(res.assignedTo.email).toBe(mockData.userNames[0]);
   });
 
-  test(" where user doesnt exist fails with status code for no user", async () => {
+  test(" throws error if user is unknown", async () => {
     nock(sentryAPIbase)
       .put(`/issues/${mockData.issueID}/`, {
         assignedTo: mockData.userNames[0]
@@ -59,7 +59,8 @@ describe("assignIssue ", () => {
         assignedTo: ["Unknown actor input"]
       });
 
-    const res = await assignIssue(mockData.issueID, mockData.userNames[0]);
-    expect(res).toBe(mockData.noUserStatusCode);
+    await expect(assignIssue(mockData.issueID, mockData.userNames[0])).rejects.toThrow();
+    // const res = await assignIssue(mockData.issueID, mockData.userNames[0]);
+    // expect(res).toBe(mockData.noUserStatusCode);
   });
 });

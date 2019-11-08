@@ -42,46 +42,50 @@ app.post("/", async function(request, response) {
 
 // Get list of users for project, save to queue
 async function init() {
-  await repopulateUserQueue();
+  let updatedUsers = await getProjectUsers(projectID, orgSlug);
+
+  // If newly-retrieved list is still empty, give up!
+  if (updatedUsers.length === 0) {
+    throw new Error(`Unable to retrieve any users with access to project ${projectID}.`);
+  }
+
+  // Init queue and master list
+  app.allUsers = [...updatedUsers];
+  app.queuedUsers = [...updatedUsers];
 }
 
 async function assignNextUser(issueID) {
-  while (app.queuedUsers && app.queuedUsers.length > 0) {
+  while (app.allUsers && app.allUsers.length > 0) {
+    // Reset queue if empty by copying from master list
+    if (app.queuedUsers && app.queuedUsers.length === 0) {
+      repopulateUserQueue();
+    }
     const dequeuedUser = app.queuedUsers.shift();
-    let result = await assignIssue(issueID, dequeuedUser);
-    if (result !== null && result === 400) {
-      // If the user was rejected by the server, pull them out of the master list
-      removeUserFromList(dequeuedUser);
-    } else if (result !== null) {
-      // succes
+    try { 
+      let result = await assignIssue(issueID, dequeuedUser);
+      // Stop loop once successfully assigned
       return;
+    } catch (error) {
+      if (error.statusCode === 400) {
+        // If the user is invalid, pull them out of the master list and continue loop
+        removeUserFromList(dequeuedUser);
+      } else {
+        // For any other error code, peace out
+        console.error("Can't assign issue. ");
+        throw error;
+      }
     }
   }
 
-  await repopulateUserQueue();
-  // If repopulating user queue gave us some new users, try assigning again,
-  // otherwise bail out.
-  // WARNING: Can this recur infinitely?
-  return app.queuedUsers ? assignNextUser(issueID) : null;
+  throw new Error("Can't assign issue; no valid users remaining in master list. At this point, just go restart the server!");
+
 }
 
 function removeUserFromList(targetUser) {
   app.allUsers = app.allUsers.filter(user => user !== targetUser);
 }
-async function repopulateUserQueue() {
-  // If no valid users are remaining in the queue, request updated user list
-  if (app.allUsers.length === 0) {
-    let updatedUsers = await getProjectUsers(projectID, orgSlug);
-    app.allUsers = [...updatedUsers];
 
-    // If newly-retrieved list is still empty, give up!
-    if (app.allUsers.length === 0) {
-      console.error(
-        "Unable to retrieve any users with access to this issue."
-      );
-    }
-  }
-
+function repopulateUserQueue() {
   // Reset queuedUsers with list of available users
   app.queuedUsers = [...app.allUsers];
 }
