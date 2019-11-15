@@ -5,6 +5,7 @@ if (dotenvConfig.error) {
 }
 
 const app = require("./app");
+require('./sentry');
 
 // On server start, get list of users (from project listed in .env) and save to memory
 const listener = app.listen(process.env.PORT, function() {
