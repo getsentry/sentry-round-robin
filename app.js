@@ -44,7 +44,6 @@ async function init() {
 
   // Init queue and master list
   app.allUsers = [...updatedUsers];
-  app.queuedUsers = [...updatedUsers];
 }
 
 async function assignNextUser(issueID) {
