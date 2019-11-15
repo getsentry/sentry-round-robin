@@ -11,10 +11,7 @@ app.use(bodyParser.json());
 
 // Array of all usernames with access to the given project
 app.allUsers = [];
-
-// Array of usernames queued up to be assigned to upcoming new issues
-app.queuedUsers = [];
-
+app.nextUserIndex = 0;
 
 // When receiving a POST request from Sentry:
 app.post("/", async function(request, response) {
@@ -27,12 +24,8 @@ app.post("/", async function(request, response) {
 
   // If a new issue was just created
   if (resource === "issue" && action === "created") {
-    // Init or reset queue if empty
-    if (app.queuedUsers.length === 0) {
-      app.queuedUsers = [...app.allUsers];
-    }
 
-    // Assign issue to the next user in the queue and remove user from queue
+    // Assign issue to the next user in the queue 
     const issueID = request.body.data.issue.id;
     await assignNextUser(issueID);
   }
@@ -56,19 +49,17 @@ async function init() {
 
 async function assignNextUser(issueID) {
   while (app.allUsers && app.allUsers.length > 0) {
-    // Reset queue if empty by copying from master list
-    if (app.queuedUsers && app.queuedUsers.length === 0) {
-      repopulateUserQueue();
-    }
-    const dequeuedUser = app.queuedUsers.shift();
+    let nextUser = app.allUsers[app.nextUserIndex];
     try { 
-      let result = await assignIssue(issueID, dequeuedUser);
+      let result = await assignIssue(issueID, nextUser);
+      // Advance userIndex to next user (wrap around based on length of array)
+      app.nextUserIndex = (++app.nextUserIndex) % app.allUsers.length;
       // Stop loop once successfully assigned
       return;
     } catch (error) {
       if (error.statusCode === 400) {
         // If the user is invalid, pull them out of the master list and continue loop
-        removeUserFromList(dequeuedUser);
+        removeUserFromList(app.nextUserIndex);
       } else {
         // For any other error code, peace out
         console.error("Can't assign issue. ");
@@ -81,13 +72,8 @@ async function assignNextUser(issueID) {
 
 }
 
-function removeUserFromList(targetUser) {
-  app.allUsers = app.allUsers.filter(user => user !== targetUser);
-}
-
-function repopulateUserQueue() {
-  // Reset queuedUsers with list of available users
-  app.queuedUsers = [...app.allUsers];
+function removeUserFromList(userIndex) {
+  app.allUsers.splice(userIndex, 1)
 }
 
 app.listen = async function() {
