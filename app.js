@@ -23,7 +23,7 @@ app.post("/", async function(request, response) {
   }
 
   const resource = request.get("sentry-hook-resource");
-  const action = request.body.action;
+  const {action} = request.body;
 
   // If a new issue was just created
   if (resource === "issue" && action === "created") {
@@ -33,7 +33,7 @@ app.post("/", async function(request, response) {
     }
 
     // Assign issue to the next user in the queue and remove user from queue
-    const issueID = request.body.data.issue.id;
+    const {id:issueID} = request.body.data.issue;
     await assignNextUser(issueID);
   }
 
