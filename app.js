@@ -9,12 +9,15 @@ const bodyParser = require("body-parser");
 
 app.use(bodyParser.json());
 
+app.use(function onError(err, req, res, next) {
+  res.sendStatus(500);
+});
+
 // Array of all usernames with access to the given project
 app.allUsers = [];
 
 // Array of usernames queued up to be assigned to upcoming new issues
 app.queuedUsers = [];
-
 
 // When receiving a POST request from Sentry:
 app.post("/", async function(request, response) {
