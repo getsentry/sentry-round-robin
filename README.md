@@ -31,6 +31,8 @@ Note: This first version currently works for only *one* project at a time. You'l
   1. Set the required permissions: "Issue & Event" requires `Read & Write`, and "Organization" requires `Read`.
 
   1. Check the box for "issue" under the "Webhooks" section to be notified when issued are created, resolved, or assigned.
+  
+  1. Press "Save Changes" on the bottom right
 
   1. From the bottom of the "Internal Integrations" page in the Sentry UI, under the "Tokens" section, copy the integration's token -- you'll need to paste this into your `.env` file next.
 
