@@ -24,16 +24,16 @@ describe("getProjectUsers ", () => {
     expect(res).toHaveLength(2);
   });
 
-  test("fails with empty array", async () => {
+  test("throws an error on failure", async () => {
     nock(sentryAPIbase)
       .get(
         `/organizations/${mockData.orgSlug}/users/?project=${mockData.projectID}`
       )
       .reply(404, { detail: "The requested resource does not exist" });
 
-    const res = await getProjectUsers(mockData.projectID, mockData.orgSlug);
-    expect(res).toHaveLength(0);
+    await expect(getProjectUsers(mockData.projectID, mockData.orgSlug)).rejects.toThrow();
   });
+
 });
 
 describe("assignIssue ", () => {

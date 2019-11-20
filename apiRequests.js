@@ -10,14 +10,7 @@ async function getProjectUsers(projectID, orgSlug) {
     headers: { Authorization: "Bearer " + process.env.SENTRY_TOKEN }
   };
 
-  let result;
-  try {
-    result = await sendRequest(requestOptions);
-  } catch (error) {
-    console.log("Error retrieving project users: ", error.message);
-    return [];
-  }
-
+  let result = await sendRequest(requestOptions);
   return result.map(userData => userData.user.username);
 }
 
