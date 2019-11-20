@@ -37,9 +37,8 @@ describe("app.js", () => {
   });
 
   beforeEach(() => {
-    // Reset state between tests, as if server has been restarted each time
     app.allUsers = [...mockData.userNames];
-    app.nextUserIndex = 0;
+    app.queuedUsers = [...mockData.userNames];
 
     // Mock request for fetching users; persist between tests
     nock(sentryAPIbase)
@@ -71,14 +70,10 @@ describe("app.js", () => {
     expect(result).toBe("ok");
   });
 
-  test("First user is assigned to an issue and next user index advances", async function() {
-    // Start with array of user #1 and user #2; user #1 is next to be assigned
-    expect(app.allUsers.length).toBe(2);
-    expect(app.nextUserIndex).toBe(0);
-    expect(app.allUsers[app.nextUserIndex]).toBe(mockData.userNames[0]);
-
-    console.log(app.nextUserIndex, app.allUsers);
-    console.log(app.allUsers[app.nextUserIndex]);
+  test("First user is assigned to an issue and removed from queue", async function() {
+    // Start with array of user #1 and user #2
+    expect(app.queuedUsers.length).toBe(2);
+    expect(app.queuedUsers[0]).toBe(mockData.userNames[0]);
 
     // Assign issue to mock user 1
     const request = nock(sentryAPIbase)
@@ -90,17 +85,12 @@ describe("app.js", () => {
     await sendRequest(newIssueRequestOptions);
     expect(request.isDone()).toBe(true);
 
-    // Expect next user to be user #2
-    expect(app.nextUserIndex).toBe(1);
-    expect(app.allUsers[app.nextUserIndex]).toBe(mockData.userNames[1]);
+    // Expect user #1 to be removed, so user at index 0 is now user #2
+    expect(app.queuedUsers.length).toBe(1);
+    expect(app.queuedUsers[0]).toBe(mockData.userNames[1]);
   });
 
-  test("When all users have been assigned an issue, wrap around to restart the cycle", async function() {
-    // Start with array of user #1 and user #2; user #1 is next to be assigned
-    expect(app.allUsers.length).toBe(2);
-    expect(app.nextUserIndex).toBe(0);
-    expect(app.allUsers[app.nextUserIndex]).toBe(mockData.userNames[0]);
-
+  test("When all users in queue are assigned an issue, queue is reset", async function() {
     const request1 = nock(sentryAPIbase)
       .put(`/issues/${mockData.issueID}/`, {
         assignedTo: mockData.userNames[0]
@@ -113,18 +103,17 @@ describe("app.js", () => {
       })
       .reply(200, mockData.assignIssueResponse(mockData.userNames[1]));
 
-    // Assign both mock users to issues
+    // Assign both mock users to issues, removing them form users queue
     await sendRequest(newIssueRequestOptions);
     expect(request1.isDone()).toBe(true);
 
     await sendRequest(newIssueRequestOptions);
     expect(request2.isDone()).toBe(true);
 
-    // Expect next user to be user #1 again (wrap around)
-    expect(app.nextUserIndex).toBe(0);
-    expect(app.allUsers[app.nextUserIndex]).toBe(mockData.userNames[0]);
+    // Expect queue to be empty
+    expect(app.queuedUsers.length).toBe(0);
 
-    // Assign a third mock issue to the next user
+    // Assign a third mock  user, prompting queue to be reset
     const request3 = nock(sentryAPIbase)
       .put(`/issues/${mockData.issueID}/`, {
         assignedTo: mockData.userNames[0]
@@ -134,14 +123,13 @@ describe("app.js", () => {
     await sendRequest(newIssueRequestOptions);
     expect(request3.isDone()).toBe(true);
 
-    // Expect next user to be user #2
-    expect(app.nextUserIndex).toBe(1);
-    expect(app.allUsers[app.nextUserIndex]).toBe(mockData.userNames[1]);
+    // User #1 immediately assigned and removed from queue,
+    // so user at index 0 is now user #2
+    expect(app.queuedUsers.length).toBe(1);
+    expect(app.queuedUsers[0]).toBe(mockData.userNames[1]);
   });
 
   test("When a user no longer exists, reassign to subsequent users until successful", async function() {
-
-
     // Response for non-existent user
     const request1 = nock(sentryAPIbase)
       .put(`/issues/${mockData.issueID}/`, { assignedTo: mockData.fakeUser })
@@ -156,26 +144,23 @@ describe("app.js", () => {
 
     // Override with mock user that doesn't exist in the mock API
     app.allUsers[0] = mockData.fakeUser;
-
-    // Start with array of 2 users, and user 1 is next to be assigned
-    expect(app.allUsers.length).toBe(2);
-    expect(app.nextUserIndex).toBe(0);
+    app.queuedUsers[0] = mockData.fakeUser;
 
     // Assign both mock users to issues, removing them form users queue
     await sendRequest(newIssueRequestOptions);
     expect(request1.isDone()).toBe(true); // 400
     expect(request2.isDone()).toBe(true); // 200 (success)
 
-    // Expect nonexistent user to be removed from allUsers 
-    // and app.nextUserIndex should NOT have advanced
-    expect(app.allUsers.length).toBe(1);
-    expect(app.nextUserIndex).toBe(0);
+    // Expect queue to be empty after removing nonexistent user #1
+    // and then assigning/removing user #2
+    expect(app.queuedUsers.length).toBe(0);
   });
 
   // TODO: How to test this?
   test.skip("Upon assigning an issue when no valid users are remaining in allUsers queue, throw error (kill the server)", async function() {
     // Override with empty users queue
     app.allUsers = [];
+    app.queuedUsers = [];
 
     // Response for second (valid) user
     const request = nock(sentryAPIbase)
