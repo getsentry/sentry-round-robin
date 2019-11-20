@@ -1,6 +1,7 @@
 const { projectID, orgSlug } = require("./constants");
 const { getProjectUsers, assignIssue } = require("./apiRequests");
 const verifySignature = require("./verify");
+const sentry = require("./sentry");
 
 const http = require("http");
 const express = require("express");
@@ -21,12 +22,20 @@ app.queuedUsers = [];
 
 // When receiving a POST request from Sentry:
 app.post("/", async function(request, response) {
+
   if (!verifySignature(request, process.env.SENTRY_API_SECRET)) {
     return response.status(401).send('bad signature');
   }
 
   const resource = request.get("sentry-hook-resource");
   const {action} = request.body;
+
+  if (sentry) {
+    sentry.addBreadcrumb({
+      message: `Request received. resource: ${resource}, action: ${action}`,
+      level: sentry.Severity.Info
+    });
+  }
 
   // If a new issue was just created
   if (resource === "issue" && action === "created") {
@@ -38,6 +47,13 @@ app.post("/", async function(request, response) {
     // Assign issue to the next user in the queue and remove user from queue
     const {id:issueID} = request.body.data.issue;
     await assignNextUser(issueID);
+
+    if (sentry) {
+      sentry.addBreadcrumb({
+        message: `New issue created. issueID: ${issueID}`,
+        level: sentry.Severity.Info
+      });
+    }
   }
 
   response.status(200).send("ok");
@@ -45,7 +61,22 @@ app.post("/", async function(request, response) {
 
 // Get list of users for project, save to queue
 async function init() {
+
+  if (sentry) {
+    sentry.addBreadcrumb({
+      message: `Server initialized`,
+      level: sentry.Severity.Info
+    });
+  }
+
   let updatedUsers = await getProjectUsers(projectID, orgSlug);
+
+  if (sentry) {
+      sentry.addBreadcrumb({
+        message: `updatedUsers: ${updatedUsers}`,
+       level: sentry.Severity.Info
+     });
+    }
 
   // If newly-retrieved list is still empty, give up!
   if (updatedUsers.length === 0) {

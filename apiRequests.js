@@ -1,5 +1,6 @@
 const { sentryAPIbase, projectID, orgSlug } = require("./constants");
 const sendRequest = require("request-promise-native");
+const sentry = require("./sentry");
 
 // Return array of users for given project (or [])
 async function getProjectUsers(projectID, orgSlug) {
@@ -22,6 +23,13 @@ async function assignIssue(issueID, username) {
     headers: { Authorization: "Bearer " + process.env.SENTRY_TOKEN },
     body: { assignedTo: username }
   };
+  
+  if (sentry) {
+    sentry.addBreadcrumb({
+      message: `Assigning issue. issueID: ${issueID}, username: ${username}`,
+      level: sentry.Severity.Info
+    });
+  }
 
   return await sendRequest(requestOptions);
 }
