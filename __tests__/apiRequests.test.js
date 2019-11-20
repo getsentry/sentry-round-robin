@@ -24,20 +24,20 @@ describe("getProjectUsers ", () => {
     expect(res).toHaveLength(2);
   });
 
-  test("fails with empty array", async () => {
+  test("throws an error on failure", async () => {
     nock(sentryAPIbase)
       .get(
         `/organizations/${mockData.orgSlug}/users/?project=${mockData.projectID}`
       )
       .reply(404, { detail: "The requested resource does not exist" });
 
-    const res = await getProjectUsers(mockData.projectID, mockData.orgSlug);
-    expect(res).toHaveLength(0);
+    await expect(getProjectUsers(mockData.projectID, mockData.orgSlug)).rejects.toThrow();
   });
+
 });
 
 describe("assignIssue ", () => {
-  test("succeeds with status 200 and ...", async () => {
+  test("succeeds with response body containing issueID and username", async () => {
     nock(sentryAPIbase)
       .put(`/issues/${mockData.issueID}/`, {
         assignedTo: mockData.userNames[0]
@@ -50,7 +50,7 @@ describe("assignIssue ", () => {
     expect(res.assignedTo.email).toBe(mockData.userNames[0]);
   });
 
-  test(" where user doesnt exist fails with status code for no user", async () => {
+  test(" throws error if user is unknown", async () => {
     nock(sentryAPIbase)
       .put(`/issues/${mockData.issueID}/`, {
         assignedTo: mockData.userNames[0]
@@ -59,7 +59,8 @@ describe("assignIssue ", () => {
         assignedTo: ["Unknown actor input"]
       });
 
-    const res = await assignIssue(mockData.issueID, mockData.userNames[0]);
-    expect(res).toBe(mockData.noUserStatusCode);
+    await expect(assignIssue(mockData.issueID, mockData.userNames[0])).rejects.toThrow();
+    // const res = await assignIssue(mockData.issueID, mockData.userNames[0]);
+    // expect(res).toBe(mockData.noUserStatusCode);
   });
 });

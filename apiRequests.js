@@ -9,14 +9,7 @@ async function getProjectUsers(projectID, orgSlug) {
     headers: { Authorization: "Bearer " + process.env.SENTRY_TOKEN }
   };
 
-  let result;
-  try {
-    result = await sendRequest(requestOptions);
-  } catch (error) {
-    console.log("Error retrieving project users: ", error.message);
-    return [];
-  }
-
+  let result = await sendRequest(requestOptions);
   return result.map(userData => userData.user.username);
 }
 
@@ -25,20 +18,12 @@ async function assignIssue(issueID, username) {
   const requestOptions = {
     url: `${sentryAPIbase}/issues/${issueID}/`,
     method: "PUT",
-
     json: true,
     headers: { Authorization: "Bearer " + process.env.SENTRY_TOKEN },
     body: { assignedTo: username }
   };
 
-  let result;
-  try {
-    result = await sendRequest(requestOptions);
-  } catch (error) {
-    console.log("Error assigning issue: ", error.message);
-    return error.statusCode;
-  }
-  return result;
+  return await sendRequest(requestOptions);
 }
 
 module.exports = {
