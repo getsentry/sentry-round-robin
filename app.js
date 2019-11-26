@@ -1,4 +1,4 @@
-const { projectID, orgSlug } = require("./constants");
+const { projectID, orgSlug, integrationProjectID } = require("./constants");
 const { getProjectUsers, assignIssue } = require("./apiRequests");
 const verifySignature = require("./verify");
 const sentry = require("./sentry");
@@ -20,9 +20,24 @@ app.allUsers = [];
 // Array of usernames queued up to be assigned to upcoming new issues
 app.queuedUsers = [];
 
-// When receiving a POST request from Sentry:
-app.post("/", async function(request, response) {
+const errorWrapper = fn => {
+  return async (req, res, next) => {
+    try {
+      await fn(req, res, next);
+    } catch(err) {
+      const errorId = sentry.captureException(err);
 
+      res.statusCode = 500;
+      res.set("Sentry-Hook-Error", errorId);
+      res.set("Sentry-Hook-Project", integrationProjectID);
+
+      res.send();
+    }
+  }
+}
+
+// When receiving a POST request from Sentry:
+app.post("/", errorWrapper(async function(request, response) {
   if (!verifySignature(request, process.env.SENTRY_API_SECRET)) {
     return response.status(401).send('bad signature');
   }
@@ -57,7 +72,7 @@ app.post("/", async function(request, response) {
   }
 
   response.status(200).send("ok");
-});
+}));
 
 // Get list of users for project, save to queue
 async function init() {
