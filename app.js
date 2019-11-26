@@ -37,7 +37,7 @@ const errorWrapper = fn => {
 }
 
 // When receiving a POST request from Sentry:
-app.post("/", errorWrapper(async function(request, response) {
+app.post("/", errorWrapper(async function post(request, response) {
   if (!verifySignature(request, process.env.SENTRY_API_SECRET)) {
     return response.status(401).send('bad signature');
   }
