@@ -10,10 +10,6 @@ const bodyParser = require("body-parser");
 
 app.use(bodyParser.json());
 
-app.use(function onError(err, req, res, next) {
-  res.sendStatus(500);
-});
-
 // Array of all usernames with access to the given project
 app.allUsers = [];
 
@@ -25,16 +21,7 @@ const errorWrapper = fn => {
     try {
       await fn(req, res, next);
     } catch(err) {
-      const errorId = sentry.captureException(err);
-
-      res.statusCode = 500;
-
-      if (errorId && integrationProjectID) {
-        res.set("Sentry-Hook-Error", errorId);
-        res.set("Sentry-Hook-Project", integrationProjectID);
-      }
-
-      res.send();
+      next(err)
     }
   }
 }
@@ -141,6 +128,20 @@ function repopulateUserQueue() {
   // Reset queuedUsers with list of available users
   app.queuedUsers = [...app.allUsers];
 }
+
+app.use(function onError(err, req, res, next) {
+  const errorId = sentry.captureException(err);
+
+  res.status(500);
+
+  if (errorId && integrationProjectID) {
+    res.set("Sentry-Hook-Error", errorId);
+    res.set("Sentry-Hook-Project", integrationProjectID);
+  }
+
+  res.send();
+
+});
 
 app.listen = async function() {
   await init();
