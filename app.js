@@ -28,8 +28,11 @@ const errorWrapper = fn => {
       const errorId = sentry.captureException(err);
 
       res.statusCode = 500;
+
+      if (errorId && integrationProjectID) {
       res.set("Sentry-Hook-Error", errorId);
       res.set("Sentry-Hook-Project", integrationProjectID);
+      }
 
       res.send();
     }
