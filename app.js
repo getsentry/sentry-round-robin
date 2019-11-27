@@ -30,8 +30,8 @@ const errorWrapper = fn => {
       res.statusCode = 500;
 
       if (errorId && integrationProjectID) {
-      res.set("Sentry-Hook-Error", errorId);
-      res.set("Sentry-Hook-Project", integrationProjectID);
+        res.set("Sentry-Hook-Error", errorId);
+        res.set("Sentry-Hook-Project", integrationProjectID);
       }
 
       res.send();
