@@ -213,5 +213,21 @@ describe("app.js", () => {
       expect(result).toBe("ok");
       expect(request.isDone()).toBe(false); // API never called
     });
+
+    it("Should ignore webhook requests for issues that don't belong to the project specified in env", async function () {
+      let result = await sendRequest({
+        url: `http://127.0.0.1:${process.env.PORT}`,
+        method: "POST",
+        json: true,
+        headers: {
+          Authorization: "Bearer " + process.env.SENTRY_TOKEN,
+          "Sentry-Hook-Resource": "issue"
+        },
+        body: mockData.wrongProjectNewIssueRequestBody
+      });
+      expect(result).toBe("ok");
+      expect(request.isDone()).toBe(false); // API never called
+    });
+
   });
 });
