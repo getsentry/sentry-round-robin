@@ -44,20 +44,25 @@ app.post("/", errorWrapper(async function post(request, response) {
 
   // If a new issue was just created
   if (resource === "issue" && action === "created") {
-    // Init or reset queue if empty
-    if (app.queuedUsers.length === 0) {
-      app.queuedUsers = [...app.allUsers];
-    }
 
-    // Assign issue to the next user in the queue and remove user from queue
-    const {id:issueID} = request.body.data.issue;
-    await assignNextUser(issueID);
-
-    if (sentry) {
-      sentry.addBreadcrumb({
-        message: `New issue created. issueID: ${issueID}`,
-        level: sentry.Severity.Info
-      });
+    const {id:newIssueProjectID} = request.body.data.issue.project;
+    // Only continue if this issue is for the project specified in .env
+    if (newIssueProjectID === projectID) {
+      // Init or reset queue if empty
+      if (app.queuedUsers.length === 0) {
+        app.queuedUsers = [...app.allUsers];
+      }
+  
+      // Assign issue to the next user in the queue and remove user from queue
+      const {id:issueID} = request.body.data.issue;
+      await assignNextUser(issueID);
+  
+      if (sentry) {
+        sentry.addBreadcrumb({
+          message: `New issue created. issueID: ${issueID}`,
+          level: sentry.Severity.Info
+        });
+      }
     }
   }
 

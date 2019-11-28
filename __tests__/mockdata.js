@@ -6,10 +6,26 @@ const projectID = "123456";
 
 // Sample Sentry data for API requests
 const issueID = "987654";
+const wrongProjectID = "332211";
 const userNames = ["testEmail@test.com", "otherTestEmail@test.com"];
 const newIssueRequestBody = {
   action: "created",
-  data: { issue: { id: issueID } }
+  data: {
+    issue: {
+      id: issueID,
+      project: {id: projectID}
+    }
+  }
+};
+
+const wrongProjectNewIssueRequestBody = {
+  action: "created",
+  data: {
+    issue: {
+      id: issueID,
+      project: {id: wrongProjectID}
+    }
+  }
 };
 
 // Sentry API sample response for unknown user or user without permissions:
@@ -137,9 +153,11 @@ module.exports = {
   sentryToken,
   orgSlug,
   projectID,
+  wrongProjectID,
   issueID,
   userNames,
   newIssueRequestBody,
+  wrongProjectNewIssueRequestBody,
   getUsersResponse,
   assignIssueResponse,
   getFakeUserResponse,
