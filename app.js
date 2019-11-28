@@ -1,4 +1,4 @@
-const { projectID, orgSlug } = require("./constants");
+const { projectID, orgSlug, integrationProjectID } = require("./constants");
 const { getProjectUsers, assignIssue } = require("./apiRequests");
 const verifySignature = require("./verify");
 const sentry = require("./sentry");
@@ -10,19 +10,24 @@ const bodyParser = require("body-parser");
 
 app.use(bodyParser.json());
 
-app.use(function onError(err, req, res, next) {
-  res.sendStatus(500);
-});
-
 // Array of all usernames with access to the given project
 app.allUsers = [];
 
 // Array of usernames queued up to be assigned to upcoming new issues
 app.queuedUsers = [];
 
-// When receiving a POST request from Sentry:
-app.post("/", async function(request, response) {
+const errorWrapper = fn => {
+  return async (req, res, next) => {
+    try {
+      await fn(req, res, next);
+    } catch(err) {
+      next(err)
+    }
+  }
+}
 
+// When receiving a POST request from Sentry:
+app.post("/", errorWrapper(async function post(request, response) {
   if (!verifySignature(request, process.env.SENTRY_API_SECRET)) {
     return response.status(401).send('bad signature');
   }
@@ -57,7 +62,7 @@ app.post("/", async function(request, response) {
   }
 
   response.status(200).send("ok");
-});
+}));
 
 // Get list of users for project, save to queue
 async function init() {
@@ -123,6 +128,20 @@ function repopulateUserQueue() {
   // Reset queuedUsers with list of available users
   app.queuedUsers = [...app.allUsers];
 }
+
+app.use(function onError(err, req, res, next) {
+  const errorId = sentry.captureException(err);
+
+  res.status(500);
+
+  if (errorId && integrationProjectID) {
+    res.set("Sentry-Hook-Error", errorId);
+    res.set("Sentry-Hook-Project", integrationProjectID);
+  }
+
+  res.send();
+
+});
 
 app.listen = async function() {
   await init();
