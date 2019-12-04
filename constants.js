@@ -1,5 +1,5 @@
 // Use .env for dev, but use process.env directly in production (eg, for Heroku)
-if (process.env.NODE_ENV !== "production") {
+if (process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "test") {
   const dotenvConfig = require("dotenv").config(); 
   
   if (dotenvConfig.error) {
