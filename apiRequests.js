@@ -1,4 +1,4 @@
-const { sentryAPIbase, projectID, orgSlug } = require("./constants");
+const { sentryAPIbase, sentryAPIToken, projectID, orgSlug } = require("./constants");
 const sendRequest = require("request-promise-native");
 const sentry = require("./sentry");
 
@@ -7,7 +7,7 @@ async function getProjectUsers(projectID, orgSlug) {
   const requestOptions = {
     url: `${sentryAPIbase}/organizations/${orgSlug}/users/?project=${projectID}`,
     json: true,
-    headers: { Authorization: "Bearer " + process.env.SENTRY_TOKEN }
+    headers: { Authorization: "Bearer " + sentryAPIToken }
   };
 
   let result = await sendRequest(requestOptions);
@@ -20,7 +20,7 @@ async function assignIssue(issueID, username) {
     url: `${sentryAPIbase}/issues/${issueID}/`,
     method: "PUT",
     json: true,
-    headers: { Authorization: "Bearer " + process.env.SENTRY_TOKEN },
+    headers: { Authorization: "Bearer " + sentryAPIToken },
     body: { assignedTo: username }
   };
   

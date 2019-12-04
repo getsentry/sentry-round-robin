@@ -1,8 +1,7 @@
 const nock = require("nock");
 const sendRequest = require("request-promise-native");
-const { sentryAPIbase } = require("../constants");
+const { sentryAPIbase, port } = require("../constants");
 const mockData = require("./mockdata.js");
-
 jest.mock('../verify.js');
 
 describe("app.js", () => {

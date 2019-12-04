@@ -1,4 +1,4 @@
-const { projectID, orgSlug, integrationProjectID } = require("./constants");
+const { projectID, orgSlug, integrationProjectID, sentryAPISecret } = require("./constants");
 const { getProjectUsers, assignIssue } = require("./apiRequests");
 const verifySignature = require("./verify");
 const sentry = require("./sentry");
@@ -28,7 +28,7 @@ const errorWrapper = fn => {
 
 // When receiving a POST request from Sentry:
 app.post("/", errorWrapper(async function post(request, response) {
-  if (!verifySignature(request, process.env.SENTRY_API_SECRET)) {
+  if (!verifySignature(request, sentryAPISecret)) {
     return response.status(401).send('bad signature');
   }
 
@@ -48,6 +48,7 @@ app.post("/", errorWrapper(async function post(request, response) {
     const {id:newIssueProjectID} = request.body.data.issue.project;
     // Only continue if this issue is for the project specified in .env
     if (newIssueProjectID === projectID) {
+      
       // Init or reset queue if empty
       if (app.queuedUsers.length === 0) {
         app.queuedUsers = [...app.allUsers];
@@ -56,7 +57,7 @@ app.post("/", errorWrapper(async function post(request, response) {
       // Assign issue to the next user in the queue and remove user from queue
       const {id:issueID} = request.body.data.issue;
       await assignNextUser(issueID);
-  
+
       if (sentry) {
         sentry.addBreadcrumb({
           message: `New issue created. issueID: ${issueID}`,
@@ -136,7 +137,7 @@ function repopulateUserQueue() {
 
 app.use(function onError(err, req, res, next) {
   const errorId = sentry.captureException(err);
-
+  console.log(err);
   res.status(500);
 
   if (errorId && integrationProjectID) {
@@ -145,7 +146,6 @@ app.use(function onError(err, req, res, next) {
   }
 
   res.send();
-
 });
 
 app.listen = async function() {
