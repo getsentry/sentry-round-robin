@@ -1,4 +1,4 @@
-const { port } = require("./constants");
+const { port } = require("./constants").constants;
 
 const app = require("./app");
 require('./sentry');

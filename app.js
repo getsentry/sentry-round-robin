@@ -1,4 +1,4 @@
-const { projectID, orgSlug, integrationProjectID, sentryAPISecret } = require("./constants");
+const { projectID, orgSlug, integrationProjectID, sentryAPISecret } = require("./constants").constants;
 const { getProjectUsers, assignIssue } = require("./apiRequests");
 const verifySignature = require("./verify");
 const sentry = require("./sentry");
@@ -137,7 +137,7 @@ function repopulateUserQueue() {
 
 app.use(function onError(err, req, res, next) {
   const errorId = sentry.captureException(err);
-  console.log(err);
+  console.error(err);
   res.status(500);
 
   if (errorId && integrationProjectID) {

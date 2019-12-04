@@ -1,4 +1,4 @@
-const { sentryAPIbase, sentryAPIToken, projectID, orgSlug } = require("./constants");
+const { sentryAPIbase, sentryAPIToken, projectID, orgSlug } = require("./constants").constants;
 const sendRequest = require("request-promise-native");
 const sentry = require("./sentry");
 

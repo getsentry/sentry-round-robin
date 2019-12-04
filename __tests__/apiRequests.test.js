@@ -1,6 +1,6 @@
 const nock = require("nock");
 
-const { sentryAPIbase } = require("../constants");
+const { sentryAPIbase } = require("../constants").constants;
 const { getProjectUsers, assignIssue } = require("../apiRequests");
 const mockData = require("./mockdata.js");
 

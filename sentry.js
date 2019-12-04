@@ -1,4 +1,4 @@
-const { sentryDSN } = require("./constants");
+const { sentryDSN } = require("./constants").constants;
 const sentry = require("@sentry/node");
 
 // Initialize Sentry only if DSN is configured
