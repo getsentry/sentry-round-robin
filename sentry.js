@@ -1,10 +1,11 @@
+const { sentryDSN } = require("./constants").constants;
 const sentry = require("@sentry/node");
 
 // Initialize Sentry only if DSN is configured
-if (process.env.SENTRY_DSN != null) {
+if (sentryDSN != null) {
 
   sentry.init({
-    dsn: process.env.SENTRY_DSN,
+    dsn: sentryDSN,
   });
 
   module.exports = sentry;

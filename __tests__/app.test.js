@@ -1,8 +1,7 @@
 const nock = require("nock");
 const sendRequest = require("request-promise-native");
-const { sentryAPIbase } = require("../constants");
+const { sentryAPIbase, port } = require("../constants").constants;
 const mockData = require("./mockdata.js");
-
 jest.mock('../verify.js');
 
 describe("app.js", () => {
@@ -10,11 +9,11 @@ describe("app.js", () => {
   const app = require("../app");
 
   const newIssueRequestOptions = {
-    url: `http://127.0.0.1:${process.env.PORT}`,
+    url: `http://127.0.0.1:${port}`,
     method: "POST",
     json: true,
     headers: {
-      Authorization: "Bearer " + process.env.SENTRY_TOKEN,
+      Authorization: "Bearer " + mockData.sentryToken,
       "Sentry-Hook-Resource": "issue"
     },
     body: mockData.newIssueRequestBody
@@ -33,7 +32,7 @@ describe("app.js", () => {
       next(err, req, res);
     });
 
-    server = await app.listen(process.env.PORT);
+    server = await app.listen(port);
   });
 
   beforeEach(() => {
@@ -186,11 +185,11 @@ describe("app.js", () => {
 
     it("Should ignore webhook requests for non-issue resources", async function () {
       let result = await sendRequest({
-        url: `http://127.0.0.1:${process.env.PORT}`,
+        url: `http://127.0.0.1:${port}`,
         method: "POST",
         json: true,
         headers: {
-          Authorization: "Bearer " + process.env.SENTRY_TOKEN,
+          Authorization: "Bearer " + mockData.sentryToken,
           "Sentry-Hook-Resource": "event"
         },
         body:{}
@@ -201,11 +200,11 @@ describe("app.js", () => {
 
     it("Should ignore webhook requests for issue resources that are not 'created' actions", async function () {
       let result = await sendRequest({
-        url: `http://127.0.0.1:${process.env.PORT}`,
+        url: `http://127.0.0.1:${port}`,
         method: "POST",
         json: true,
         headers: {
-          Authorization: "Bearer " + process.env.SENTRY_TOKEN,
+          Authorization: "Bearer " + mockData.sentryToken,
           "Sentry-Hook-Resource": "issue"
         },
         body:{ action: "deleted" }
@@ -216,11 +215,11 @@ describe("app.js", () => {
 
     it("Should ignore webhook requests for issues that don't belong to the project specified in env", async function () {
       let result = await sendRequest({
-        url: `http://127.0.0.1:${process.env.PORT}`,
+        url: `http://127.0.0.1:${port}`,
         method: "POST",
         json: true,
         headers: {
-          Authorization: "Bearer " + process.env.SENTRY_TOKEN,
+          Authorization: "Bearer " + mockData.sentryToken,
           "Sentry-Hook-Resource": "issue"
         },
         body: mockData.wrongProjectNewIssueRequestBody
