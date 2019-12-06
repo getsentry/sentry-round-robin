@@ -14,6 +14,7 @@ const constants = {
   sentryAPIToken: process.env.SENTRY_TOKEN,
   sentryAPISecret: process.env.SENTRY_API_SECRET,
   sentryDSN: process.env.SENTRY_DSN,
+  sentryRelease: process.env.SENTRY_RELEASE,
   projectID: process.env.SENTRY_PROJECT_ID,
   orgSlug: process.env.SENTRY_ORG,
   integrationProjectID: process.env.SENTRY_INTEGRATION_PROJECT_ID
