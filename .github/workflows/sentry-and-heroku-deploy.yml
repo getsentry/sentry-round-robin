@@ -1,4 +1,4 @@
-name: New Sentry Release
+name: New Sentry Release and Deploy to Heroku
 
 on:
   push:
@@ -7,28 +7,34 @@ on:
 
 jobs:
   release:
-   runs-on: ubuntu-latest
+   runs-on: ubuntu-18.04
    env:
+     HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
      SENTRY_DSN: ${{ secrets.SENTRY_DSN }} 
      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
      SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-     HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
      SENTRY_DEPLOY_ENVIRONMENT: ${{ secrets.SENTRY_DEPLOYMENT_ENVIRONMENT }}
 
    steps: 
     # See: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/configuring-a-workflow#using-the-checkout-action
     - uses: actions/checkout@v1.0.0
 
+    - name: Install dependencies, install Sentry CLI
+      run: |
+        npm install
+        curl -sL https://sentry.io/get-cli/ | bash
+
     - name: Create new release and new deploy with Sentry CLI
       run: |
-        curl -sL https://sentry.io/get-cli/ | bash
-        npm install
         SENTRY_RELEASE=$(sentry-cli releases propose-version)
-        echo $SENTRY_RELEASE
         sentry-cli releases new -p $SENTRY_PROJECT $SENTRY_RELEASE
         sentry-cli releases finalize $SENTRY_RELEASE
         sentry-cli releases set-commits --auto $SENTRY_RELEASE
         sentry-cli releases deploys $SENTRY_RELEASE new -e $SENTRY_DEPLOY_ENVIRONMENT
+
+    - name: Update Heroku env vars and deploy
+      run: |
         heroku config:set SENTRY_RELEASE=$SENTRY_RELEASE -a ${{ secrets.HEROKU_APP_NAME }}
+        git push https://heroku:$HEROKU_API_KEY@git.heroku.com/${{ secrets.HEROKU_APP_NAME }}.git HEAD:master
 
