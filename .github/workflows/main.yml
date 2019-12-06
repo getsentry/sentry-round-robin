@@ -1,0 +1,18 @@
+name: Deploy to Heroku
+
+on:
+  push:
+    branches:
+      - master
+jobs:
+  release:
+   runs-on: ubuntu-latest
+   env:
+     HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+   steps: 
+    # See: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/configuring-a-workflow#using-the-checkout-action
+    - uses: actions/checkout@v1.0.0
+    - name: Install dependencies, build, and deploy
+      run: |
+        npm install
+        git push https://heroku:$HEROKU_API_KEY@git.heroku.com/${{ secrets.HEROKU_APP_NAME }}.git HEAD:master
