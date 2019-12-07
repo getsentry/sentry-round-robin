@@ -14,7 +14,7 @@ jobs:
      SENTRY_DSN: ${{ secrets.SENTRY_DSN }} 
      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
      SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-     SENTRY_DEPLOY_ENVIRONMENT: ${{ secrets.SENTRY_DEPLOYMENT_ENVIRONMENT }}
+     SENTRY_DEPLOY_ENVIRONMENT: ${{ secrets.SENTRY_DEPLOY_ENVIRONMENT }}
 
    steps: 
     # See: https://help.github.com/en/actions/automating-your-workflow-with-github-actions/configuring-a-workflow#using-the-checkout-action
