@@ -11,7 +11,6 @@ jobs:
    env:
      HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-     SENTRY_DSN: ${{ secrets.SENTRY_DSN }} 
      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
      SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
      SENTRY_DEPLOY_ENVIRONMENT: ${{ secrets.SENTRY_DEPLOY_ENVIRONMENT }}
